@@ -27,7 +27,7 @@ export default function ZunoChat() {
       {
         role: "system",
         content:
-          "You are a friendly assistant. Keep your responses short and mostly ask questions to help clarify and refine the user's ideas. Avoid long explanations unless asked.",
+          "You are a friendly assistant. Keep your responses short and mostly ask questions to help clarify and refine the user's ideas. Avoid long explanations unless asked. Once you have a clear goal defined with at least 5 actionable next steps, guide the user to press the generate checkpoints button in order to create actionable next steps.",
       },
       ...newMessages.map((msg) => ({
         role: msg.sender === "user" ? "user" : "assistant",
