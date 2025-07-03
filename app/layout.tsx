@@ -14,9 +14,23 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`antialiased`}
-      >
+      <body className={`antialiased`}>
+        <header className="flex items-center justify-between p-4 bg-gray-800 text-white">
+          <div className="text-xl font-bold">Zuno</div>
+          <div className="flex items-center space-x-4">
+        <select className="bg-gray-700 text-white p-2 rounded">
+          <option>Project 1</option>
+          <option>Project 2</option>
+          <option>Project 3</option>
+        </select>
+        <button className="p-2 rounded hover:bg-gray-700">
+          <span className="material-icons">account</span>
+        </button>
+        <button className="p-2 rounded hover:bg-gray-700">
+          <span className="material-icons">settings</span>
+        </button>
+          </div>
+        </header>
         {children}
       </body>
     </html>
