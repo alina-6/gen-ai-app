@@ -1,47 +1,67 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-const OPENAI_API_KEY = 'key here'; // Replace with your actual OpenAI API key
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === "POST") {
-    const { prompt, maxTokens } = req.body;
+interface Message {
+  role: "system" | "user" | "assistant";
+  content: string;
+}
 
-    if (!prompt) {
-      return res.status(400).json({ error: "Prompt is required" });
-    }
+interface GenerateRequestBody {
+  messages: Message[];
+  maxTokens?: number;
+}
 
-    try {
-      // Use fetch to make a request to the OpenAI API
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-3.5-turbo", 
-          messages: [
-            { role: "user", content: prompt },  // Use the messages format with role and content
-          ],
-          max_tokens: maxTokens || 100,
-        }),
-      });
+interface OpenAIChoice {
+  message: {
+    content: string;
+  };
+}
 
-      // Check if the response is ok (status code 200)
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("OpenAI Error: ", errorData);  // Log the error response
-        return res.status(response.status).json({ error: errorData.error.message });
-      }
+interface OpenAIResponse {
+  choices: OpenAIChoice[];
+}
 
-      // Parse the response and send the text to the client
-      const data = await response.json();
-      return res.status(200).json({ text: data.choices[0].message.content });
-    } catch (error) {
-      console.error("Error generating text: ", error);
-      return res.status(500).json({ error: "Failed to generate text" });
-    }
-  } else {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
+  }
+
+  const { messages, maxTokens }: GenerateRequestBody = req.body;
+
+  if (!messages) {
+    return res.status(400).json({ error: "Messages are required" });
+  }
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo", // or gpt-4 if you prefer
+        messages: messages,
+        max_tokens: maxTokens || 100,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("OpenAI Error: ", errorData);
+      return res
+        .status(response.status)
+        .json({ error: errorData.error.message });
+    }
+
+    const data: OpenAIResponse = await response.json();
+    return res.status(200).json({ text: data.choices[0].message.content });
+  } catch (error) {
+    console.error("Error generating text: ", error);
+    return res.status(500).json({ error: "Failed to generate text" });
   }
 }
