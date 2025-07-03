@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-const OPENAI_API_KEY = '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';
+const OPENAI_API_KEY = 'key here'; // Replace with your actual OpenAI API key
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "POST") {
