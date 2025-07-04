@@ -1,15 +1,14 @@
-'use client'
 import React, { useState } from "react";
 import { useChatStore } from "../store/chatStore";
 
-const WorkSpace = ({ disabled = false }: { disabled?: boolean }) => {
+const GenerateCheckpoints = ({ disabled = false }: { disabled?: boolean }) => {
   const chatMessages = useChatStore((state) => state.chatMessages);
-  const [showConversation, setShowConversation] = useState(false);
+  const [showCheckpoints, setShowCheckpoints] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleGetConversation = async () => {
+  const handleGetCheckpoints = async () => {
     setLoading(true);
-    setShowConversation(true);
+    setShowCheckpoints(true);
     setLoading(false);
   };
 
@@ -17,12 +16,12 @@ const WorkSpace = ({ disabled = false }: { disabled?: boolean }) => {
     <div>
       <button
         className="my-5 text-md py-2 px-3 rounded-lg bg-green-800 text-white hover:bg-green-900"
-        onClick={handleGetConversation}
+        onClick={handleGetCheckpoints}
         disabled={loading || disabled}
       >
-        {loading ? "Loading..." : "Show Conversation"}
+        {loading ? "Loading..." : "Generate Checkpoints"}
       </button>
-      {showConversation && (
+      {showCheckpoints && (
         <ul>
           {chatMessages.length === 0 && <li>No messages yet.</li>}
           {chatMessages.map((cp, idx) => (
@@ -36,4 +35,4 @@ const WorkSpace = ({ disabled = false }: { disabled?: boolean }) => {
   );
 };
 
-export default WorkSpace;
+export default GenerateCheckpoints;

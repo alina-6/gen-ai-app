@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import GenerateCheckpoints from "./generateCheckpoints";
+import { useChatStore } from "../store/chatStore";
 
 type Message = {
   sender: "user" | "assistant";
@@ -8,9 +10,12 @@ type Message = {
 
 export default function ZunoChat() {
   const [prompt, setPrompt] = useState<string>("");
-  const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [hasStarted, setHasStarted] = useState<boolean>(false);
+
+  // Use Zustand global store
+  const chatMessages = useChatStore((state) => state.chatMessages);
+  const setChatMessages = useChatStore((state) => state.setChatMessages);
 
   const handleGenerate = async (userPrompt?: string) => {
     const text = userPrompt !== undefined ? userPrompt : prompt;
@@ -49,8 +54,8 @@ export default function ZunoChat() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        setChatMessages((msgs) => [
-          ...msgs,
+        setChatMessages([
+          ...newMessages,
           { sender: "assistant", text: `Error: ${errorData.error}` },
         ]);
       } else {
@@ -63,8 +68,8 @@ export default function ZunoChat() {
         if (!hasStarted) setHasStarted(true);
       }
     } catch {
-      setChatMessages((msgs) => [
-        ...msgs,
+      setChatMessages([
+        ...chatMessages,
         { sender: "assistant", text: "Error generating text" },
       ]);
     } finally {
@@ -83,43 +88,61 @@ export default function ZunoChat() {
       </p>
 
       {!hasStarted ? (
-        <div className="w-full max-w-3xl">
-          <textarea
-            className="w-full p-3 border rounded-xl mb-4"
-            placeholder="Whats the next thing you've been meaning to tackle?"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-          />
-          <div className="flex justify-end">
+        chatMessages.length > 0 ? (<div className="flex flex-col items-center gap-4">
+          <div className="flex flex-row w-full justify-between gap-4">
             <button
-              className="px-4 py-2 rounded-lg bg-green-800 text-white hover:bg-green-900 disabled:opacity-50"
-              onClick={() => handleGenerate()}
-              disabled={loading || !prompt.trim()}
+              className="px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 flex justify-start"
+              onClick={() => {
+                setChatMessages([]);
+                console.log(chatMessages);
+                setHasStarted(false);
+                setPrompt("");
+              }}
             >
-              {loading ? "Ideating..." : "Start Ideation"}
+              Start a New Chat
+            </button>
+            <button
+              className="px-4 py-2 rounded-lg bg-green-800 text-white hover:bg-green-900 flex justify-end"
+              onClick={() => setHasStarted(true)}
+            >
+              Continue Previous Chat
             </button>
           </div>
-        </div>
+        </div>) : (
+          <div className="w-full max-w-3xl">
+            <textarea
+              className="w-full p-3 border rounded-xl mb-4"
+              placeholder="Whats the next thing you've been meaning to tackle?"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+            />
+            <div className="flex justify-end">
+              <button
+                className="px-4 py-2 rounded-lg bg-green-800 text-white hover:bg-green-900 disabled:opacity-50"
+                onClick={() => handleGenerate()}
+                disabled={loading || !prompt.trim()}
+              >
+                {loading ? "Ideating..." : "Start Ideation"}
+              </button>
+            </div>
+          </div>)
       ) : (
         <div className="w-full p-3 mb-4">
           <div>
             {chatMessages.length === 0 && <p>No messages yet.</p>}
             {chatMessages.map((msg, idx) => (
               <div
-                className={`my-4 flex ${
-                  msg.sender === "user" ? "justify-end" : "justify-start"
-                }`}
+                className={`my-4 flex ${msg.sender === "user" ? "justify-end" : "justify-start"
+                  }`}
                 key={idx}
               >
                 <div
-                  className={`flex flex-col w-full ${
-                    msg.sender === "user" ? "items-end" : "items-start"
-                  }`}
+                  className={`flex flex-col w-full ${msg.sender === "user" ? "items-end" : "items-start"
+                    }`}
                 >
                   <span
-                    className={`text-xs font-semibold mb-1 ${
-                      msg.sender === "user" ? "text-green-800" : "text-gray-700"
-                    }`}
+                    className={`text-xs font-semibold mb-1 ${msg.sender === "user" ? "text-green-800" : "text-gray-700"
+                      }`}
                   >
                     {msg.sender === "user" ? "You" : "Zuno"}
                   </span>
@@ -160,9 +183,9 @@ export default function ZunoChat() {
             </div>
           </div>
           <div>
-            <button className="my-5 text-md py-2 px-3 rounded-lg bg-green-800 text-white hover:bg-green-900 ">
-              Generate Checkpoints
-            </button>
+            <GenerateCheckpoints
+              disabled={loading || chatMessages.length === 0}
+            />
           </div>
         </div>
       )}
